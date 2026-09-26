@@ -12,7 +12,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "moe.fuqiuluo.portal"
+        applicationId = "com.netease.uu"
         minSdk = 26
         targetSdk = 35
         versionCode = getVersionCode()
