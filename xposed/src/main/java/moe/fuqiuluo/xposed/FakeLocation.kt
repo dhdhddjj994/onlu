@@ -46,8 +46,18 @@ class FakeLocation: IXposedHookLoadPackage, IXposedHookZygoteInit {
      * @param lpparam Information about the app.
      * @throws Throwable Everything the callback throws is caught and logged.
      */
-    override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam?) {
-        if (lpparam?.packageName != "android" && lpparam?.packageName != "com.android.phone") {
+    override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam?) {      
+        if (lpparam == null) {
+            return
+        }
+
+        if (
+            lpparam.packageName != "android" &&
+            lpparam.packageName != "com.android.phone" &&
+            lpparam.packageName != "com.android.location.fused" &&
+            lpparam.packageName != "com.xiaomi.location.fused" &&
+            lpparam.packageName != "com.oplus.location"
+        ) {
             return
         }
 
