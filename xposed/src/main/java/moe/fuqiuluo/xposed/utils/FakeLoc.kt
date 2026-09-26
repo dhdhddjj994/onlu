@@ -154,7 +154,7 @@ object FakeLoc {
 
     fun moveLocation(lat: Double = latitude, lon: Double = longitude, n: Double, angle: Double = bearing): Pair<Double, Double> {
         val earthRadius = 6371000.0
-        val radiusInDegrees = Random.nextDouble(n, n + 1.2) / earthRadius * (180 / PI)
+        val radiusInDegrees = n / earthRadius * (180 / PI)
         val newLat = lat + radiusInDegrees * cos(Math.toRadians(angle))
         val newLon = lon + radiusInDegrees * sin(Math.toRadians(angle)) / cos(Math.toRadians(lat))
         return Pair(newLat, newLon)
