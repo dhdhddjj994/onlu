@@ -70,7 +70,7 @@ object BasicLocationHook: BaseLocationHook() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     location.isMock = false
                 }
-                location.altitude = FakeLoc.altitude + Random.nextDouble(-1.5, 1.5)
+                location.altitude = FakeLoc.altitude + Random.nextDouble(-4.5, 5.5)
                 location.speed = FakeLoc.speed.toFloat()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     location.speedAccuracyMetersPerSecond = 0F
