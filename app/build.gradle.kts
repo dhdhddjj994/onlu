@@ -12,7 +12,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.netease.uu"
+        applicationId = "com.shanbay.sentence"
         minSdk = 26
         targetSdk = 35
         versionCode = getVersionCode()
