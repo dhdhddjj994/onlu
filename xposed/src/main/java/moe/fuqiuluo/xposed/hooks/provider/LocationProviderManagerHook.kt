@@ -282,13 +282,18 @@ object LocationProviderManagerHook {
                     location.isMock = false
                 }
                 location.altitude = FakeLoc.altitude + Random.nextDouble(-1.5, 1.5)
-                location.speed = originLocation.speed
+                location.speed = FakeLoc.speed.toFloat()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     location.speedAccuracyMetersPerSecond = 0F
                 }
 
-                location.time = originLocation.time
-                location.accuracy = originLocation.accuracy
+                location.time = System.currentTimeMillis()
+                location.accuracy =
+                    if (FakeLoc.accuracy != 0.0f) {
+                        FakeLoc.accuracy
+                    } else {
+                        originLocation.accuracy
+                    }
                 var modBearing = FakeLoc.bearing % 360.0 + 0.0
                 if (modBearing < 0) {
                     modBearing += 360.0
@@ -299,7 +304,7 @@ object LocationProviderManagerHook {
                 }
                 location.elapsedRealtimeNanos = originLocation.elapsedRealtimeNanos
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    location.elapsedRealtimeUncertaintyNanos = originLocation.elapsedRealtimeUncertaintyNanos
+                    location.elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     location.verticalAccuracyMeters = originLocation.verticalAccuracyMeters
