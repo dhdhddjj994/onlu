@@ -4,6 +4,7 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import de.robv.android.xposed.XposedHelpers
 import moe.fuqiuluo.xposed.utils.FakeLoc
 import moe.fuqiuluo.xposed.utils.Logger
@@ -45,16 +46,16 @@ abstract class BaseLocationHook: BaseDivineService() {
         location.longitude = jitterLat.second
         location.altitude = FakeLoc.altitude + Random.nextDouble(-1.5, 1.5)
         val speedAmp = Random.nextDouble(-FakeLoc.speedAmplitude, FakeLoc.speedAmplitude)
-        location.speed = (originLocation.speed + speedAmp).toFloat()
+        location.speed = (FakeLoc.speed + speedAmp).coerceAtLeast(0.0).toFloat()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && originLocation.hasSpeedAccuracy()) {
-            location.speedAccuracyMetersPerSecond = (FakeLoc.speed + speedAmp).toFloat()
+            location.speedAccuracyMetersPerSecond = 0.3f
         }
 
         if (location.altitude == 0.0) {
             location.altitude = 80.0
         }
 
-        location.time = originLocation.time
+        location.time = System.currentTimeMillis()
 
         // final addition of zero is to remove -0 results. while these are technically within the
         // range [0, 360) according to IEEE semantics, this eliminates possible user confusion.
@@ -76,7 +77,7 @@ abstract class BaseLocationHook: BaseDivineService() {
             location.speed = 1.2f
         }
 
-        location.elapsedRealtimeNanos = originLocation.elapsedRealtimeNanos
+        location.elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             location.elapsedRealtimeUncertaintyNanos = originLocation.elapsedRealtimeUncertaintyNanos
         }
