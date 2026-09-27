@@ -12,7 +12,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.shanbay.sentence"
+        applicationId = "com.fayu.danci"
         minSdk = 26
         targetSdk = 35
         versionCode = getVersionCode()
