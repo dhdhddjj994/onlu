@@ -71,7 +71,7 @@ object BasicLocationHook: BaseLocationHook() {
                     location.isMock = false
                 }
                 location.altitude = FakeLoc.altitude + Random.nextDouble(-4.5, 5.5)
-                location.speed = FakeLoc.speed.toFloat()
+                location.speed = FakeLoc.reportedSpeed()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     location.speedAccuracyMetersPerSecond = 0F
                 }
