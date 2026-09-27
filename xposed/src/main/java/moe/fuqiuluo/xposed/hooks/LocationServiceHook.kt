@@ -244,6 +244,15 @@ data class GnssSatellite(
 
     var azimuth: Float =
         Random.nextFloat(0f, 360f),
+
+    val hasEphemeris: Boolean =
+        Random.nextFloat() > 0.1f,
+
+    val hasAlmanac: Boolean =
+        Random.nextFloat() > 0.05f,
+
+    val usedInFix: Boolean =
+        Random.nextFloat() > 0.3f,
 )
 data class MockGnssData(
     val svCount: Int,
@@ -595,9 +604,9 @@ internal object LocationServiceHook: BaseLocationHook() {
                             selectedSatellites.forEachIndexed { index, sat ->
                                 svidWithFlags[index] = 0
 
-                                val hasEphemeris = Random.nextFloat() > 0.1f    // 90%概率有星历
-                                val hasAlmanac = Random.nextFloat() > 0.05f     // 95%概率有年历
-                                val usedInFix = Random.nextFloat() > 0.3f       // 70%概率用于定位
+                                val hasEphemeris = sat.hasEphemeris
+                                val hasAlmanac = sat.hasAlmanac
+                                val usedInFix = sat.usedInFix       // 70%概率用于定位
                                 val hasCarrierFreq = true                       // 总是有载波频率
                                 val hasBasebandCn0 = true                       // 总是有基带载噪比
 
