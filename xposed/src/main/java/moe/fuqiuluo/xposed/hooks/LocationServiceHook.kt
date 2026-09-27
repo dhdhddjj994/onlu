@@ -10,6 +10,7 @@ import android.os.DeadObjectException
 import android.os.IBinder
 import android.os.IInterface
 import android.os.Parcel
+import android.os.SystemClock
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
@@ -106,6 +107,51 @@ private val satelliteList = buildList {
             )
         )
     }
+}
+private var currentSatelliteCount = 0
+private var lastSatelliteCountChangeTime = 0L
+
+private fun getSatelliteCount(): Int {
+    val maxCount = minOf(
+        MAX_SATELLITES,
+        satelliteList.size
+    )
+
+    val minCount = FakeLoc.minSatellites.coerceIn(
+        1,
+        maxCount
+    )
+
+    val now = SystemClock.elapsedRealtime()
+
+    // 第一次初始化
+    if (currentSatelliteCount !in minCount..maxCount) {
+        currentSatelliteCount =
+            Random.nextInt(
+                minCount,
+                maxCount + 1
+            )
+
+        lastSatelliteCountChangeTime = now
+    }
+
+    // 每 5 秒最多变化 1 颗
+    if (
+        now - lastSatelliteCountChangeTime >= 5000L
+    ) {
+        currentSatelliteCount =
+            (
+                currentSatelliteCount +
+                    Random.nextInt(-1, 2)
+            ).coerceIn(
+                minCount,
+                maxCount
+            )
+
+        lastSatelliteCountChangeTime = now
+    }
+
+    return currentSatelliteCount
 }
 object GnssFlags {
     // 基本标志位
@@ -480,9 +526,7 @@ internal object LocationServiceHook: BaseLocationHook() {
 
                         if (!FakeLoc.enableMockGnss) return@beforeHook
 
-                        val maxSatellites = minOf(MAX_SATELLITES, satelliteList.size)
-                        val minSatellites = FakeLoc.minSatellites.coerceIn(1, maxSatellites)
-                        val svCount = Random.nextInt( minSatellites, maxSatellites + 1 )
+                        val svCount = getSatelliteCount()
                         val mockGps = MockGnssData(
                             svCount = svCount,
                             svidWithFlags = IntArray(svCount),
@@ -527,9 +571,9 @@ internal object LocationServiceHook: BaseLocationHook() {
                                 elevations[index] = Random.nextFloat(sat.type.elevationRange.start, sat.type.elevationRange.endInclusive)
                                 azimuths[index] = Random.nextFloat(0f, 360f)
                                 carrierFreqs[index] = sat.carrierFreqHz
+                                    }
                                 }
-                            }
-                        }
+                        
 
                         if (args[0] is Int) {
                             args[0] = svCount
