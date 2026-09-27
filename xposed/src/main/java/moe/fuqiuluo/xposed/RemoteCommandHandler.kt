@@ -79,6 +79,7 @@ object RemoteCommandHandler {
             }
             "stop" -> {
                 FakeLoc.enable = false
+                FakeLoc.stopMoving()
                 FakeLoc.hasBearings = false
                 if (isLoadedLibrary) {
                     Dobby.setStatus(false)
@@ -157,7 +158,13 @@ object RemoteCommandHandler {
             }
             "move" -> {
                 val distance = rely.getDouble("n", 0.0)
-                if (distance == 0.0) return true
+
+                if (distance == 0.0) {
+                    FakeLoc.stopMoving()
+                    return true
+                }
+
+                FakeLoc.markMoving()
                 val bearing = rely.getDouble("bearing", 0.0)
                 val newLoc = FakeLoc.moveLocation(
                     n = distance,
