@@ -1,5 +1,6 @@
 package moe.fuqiuluo.xposed.utils
 
+import android.os.SystemClock
 import android.location.Location
 import kotlin.math.PI
 import kotlin.math.atan2
@@ -103,8 +104,33 @@ object FakeLoc {
 
     @Volatile var speed = 3.05
 
-    var speedAmplitude = 1.0
+    var speedAmplitude = 0.5
+    @Volatile
+    private var lastMoveTime = 0L
 
+    fun markMoving() {
+        lastMoveTime = SystemClock.elapsedRealtime()
+    }
+
+    fun stopMoving() {
+        lastMoveTime = 0L
+    }
+
+    fun reportedSpeed(): Float {
+        if (
+            lastMoveTime == 0L ||
+            SystemClock.elapsedRealtime() - lastMoveTime > 1500L
+        ) {
+            return 0.0f
+        }
+
+        return (
+            speed + Random.nextDouble(
+                -speedAmplitude,
+                speedAmplitude
+            )
+        ).coerceAtLeast(0.0).toFloat()
+    }
     @Volatile var hasBearings = false
 
     var bearing = 0.0
