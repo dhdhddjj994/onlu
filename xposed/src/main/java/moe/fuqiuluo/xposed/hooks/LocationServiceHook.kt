@@ -153,6 +153,47 @@ private fun getSatelliteCount(): Int {
 
     return currentSatelliteCount
 }
+private val activeSatellites =
+    mutableListOf<GnssSatellite>()
+
+@Synchronized
+private fun getSelectedSatellites(
+    targetCount: Int
+): List<GnssSatellite> {
+
+    // 第一次初始化
+    if (activeSatellites.isEmpty()) {
+        activeSatellites.addAll(
+            satelliteList
+                .shuffled()
+                .take(targetCount)
+        )
+
+        return activeSatellites.toList()
+    }
+
+    // 卫星数量减少，只随机移除需要减少的数量
+    while (activeSatellites.size > targetCount) {
+        activeSatellites.removeAt(
+            Random.nextInt(activeSatellites.size)
+        )
+    }
+
+    // 卫星数量增加，只增加新的卫星
+    while (activeSatellites.size < targetCount) {
+        val newSatellite =
+            satelliteList
+                .filterNot {
+                    it in activeSatellites
+                }
+                .randomOrNull()
+                ?: break
+
+        activeSatellites.add(newSatellite)
+    }
+
+    return activeSatellites.toList()
+}
 object GnssFlags {
     // 基本标志位
     const val SVID_FLAGS_NONE = 0
@@ -535,8 +576,7 @@ internal object LocationServiceHook: BaseLocationHook() {
                             azimuths = FloatArray(svCount),
                             carrierFreqs = FloatArray(svCount)
                         ).apply {
-                            val selectedSatellites = satelliteList.shuffled().take(svCount)
-
+                            val selectedSatellites = getSelectedSatellites(svCount)
                             selectedSatellites.forEachIndexed { index, sat ->
                                 svidWithFlags[index] = 0
 
