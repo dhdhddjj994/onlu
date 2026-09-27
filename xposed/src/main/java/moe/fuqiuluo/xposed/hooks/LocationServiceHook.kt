@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
 
-private const val MAX_SATELLITES = 35 // 北斗系统实际可见卫星数上限
+private const val MAX_SATELLITES = 80 // 北斗系统实际可见卫星数上限
 
 // 载噪比范围，考虑不同轨道类型
 private const val GEO_MIN_CN0 = 30.0f  // GEO卫星信号较强
@@ -45,71 +45,68 @@ private const val IGSO_MAX_CN0 = 42.0f
 private const val MEO_MIN_CN0 = 20.0f  // MEO卫星信号相对较弱
 private const val MEO_MAX_CN0 = 40.0f
 
-// 北斗频率
-private const val BDS_B1I_FREQ = 1561.098f // MHz
-private const val BDS_B2I_FREQ = 1207.140f
-private const val BDS_B3I_FREQ = 1268.520f
+// GNSS carrier frequency，单位 Hz
+private const val GPS_L1_FREQ = 1575.42e6f
+private const val GLONASS_L1_FREQ = 1602.0e6f
+private const val GALILEO_E1_FREQ = 1575.42e6f
+private const val BDS_B1I_FREQ = 1561.098e6f
 
-private val satelliteList = listOf(
-    BDSSatellite(1, OrbitType.GEO),
-    BDSSatellite(2, OrbitType.GEO),
-    BDSSatellite(3, OrbitType.GEO),
-    BDSSatellite(4, OrbitType.GEO),
-    BDSSatellite(5, OrbitType.GEO),
-    BDSSatellite(6, OrbitType.IGSO),
-    BDSSatellite(7, OrbitType.IGSO),
-    BDSSatellite(8, OrbitType.IGSO),
-    BDSSatellite(9, OrbitType.IGSO),
-    BDSSatellite(10, OrbitType.IGSO),
-    BDSSatellite(11, OrbitType.MEO),
-    BDSSatellite(12, OrbitType.MEO),
-    BDSSatellite(13, OrbitType.IGSO),
-    BDSSatellite(14, OrbitType.MEO),
-    BDSSatellite(16, OrbitType.IGSO),
-    BDSSatellite(19, OrbitType.MEO),
-    BDSSatellite(20, OrbitType.MEO),
-    BDSSatellite(21, OrbitType.MEO),
-    BDSSatellite(22, OrbitType.MEO),
-    BDSSatellite(23, OrbitType.MEO),
-    BDSSatellite(24, OrbitType.MEO),
-    BDSSatellite(25, OrbitType.MEO),
-    BDSSatellite(26, OrbitType.MEO),
-    BDSSatellite(27, OrbitType.MEO),
-    BDSSatellite(28, OrbitType.MEO),
-    BDSSatellite(29, OrbitType.MEO),
-    BDSSatellite(30, OrbitType.MEO),
-    BDSSatellite(31, OrbitType.IGSO),
-    BDSSatellite(32, OrbitType.MEO),
-    BDSSatellite(33, OrbitType.MEO),
-    BDSSatellite(34, OrbitType.MEO),
-    BDSSatellite(35, OrbitType.MEO),
-    BDSSatellite(36, OrbitType.MEO),
-    BDSSatellite(37, OrbitType.MEO),
-    BDSSatellite(38, OrbitType.IGSO),
-    BDSSatellite(39, OrbitType.IGSO),
-    BDSSatellite(40, OrbitType.IGSO),
-    BDSSatellite(41, OrbitType.MEO),
-    BDSSatellite(42, OrbitType.MEO),
-    BDSSatellite(43, OrbitType.MEO),
-    BDSSatellite(44, OrbitType.MEO),
-    BDSSatellite(45, OrbitType.MEO),
-    BDSSatellite(46, OrbitType.MEO),
-    BDSSatellite(56, OrbitType.IGSO),
-    BDSSatellite(57, OrbitType.MEO),
-    BDSSatellite(58, OrbitType.MEO),
-    BDSSatellite(59, OrbitType.GEO),
-    BDSSatellite(60, OrbitType.GEO),
-    BDSSatellite(61, OrbitType.GEO),
-    BDSSatellite(62, OrbitType.GEO),
-    BDSSatellite(48, OrbitType.MEO),
-    BDSSatellite(50, OrbitType.MEO),
-    BDSSatellite(47, OrbitType.MEO),
-    BDSSatellite(49, OrbitType.MEO),
-//    BDSSatellite(130, OrbitType.GEO),
-//    BDSSatellite(143, OrbitType.GEO),
-//    BDSSatellite(144, OrbitType.GEO),
-)
+private val satelliteList = buildList {
 
+    // GPS：美国，SVID 1~32
+    for (svid in 1..32) {
+        add(
+            GnssSatellite(
+                svid = svid,
+                constellation = GnssFlags.CONSTELLATION_GPS,
+                type = OrbitType.MEO,
+                carrierFreqHz = GPS_L1_FREQ
+            )
+        )
+    }
+
+    // GLONASS：俄罗斯，SVID 1~24
+    for (svid in 1..24) {
+        add(
+            GnssSatellite(
+                svid = svid,
+                constellation = GnssFlags.CONSTELLATION_GLONASS,
+                type = OrbitType.MEO,
+                carrierFreqHz = GLONASS_L1_FREQ
+            )
+        )
+    }
+
+    // Galileo：欧盟，SVID 1~36
+    for (svid in 1..36) {
+        add(
+            GnssSatellite(
+                svid = svid,
+                constellation = GnssFlags.CONSTELLATION_GALILEO,
+                type = OrbitType.MEO,
+                carrierFreqHz = GALILEO_E1_FREQ
+            )
+        )
+    }
+
+    // BeiDou：中国，SVID 1~63
+    for (svid in 1..63) {
+        val orbitType = when (svid) {
+            in 1..5 -> OrbitType.GEO
+            in 6..10 -> OrbitType.IGSO
+            else -> OrbitType.MEO
+        }
+
+        add(
+            GnssSatellite(
+                svid = svid,
+                constellation = GnssFlags.CONSTELLATION_BEIDOU,
+                type = orbitType,
+                carrierFreqHz = BDS_B1I_FREQ
+            )
+        )
+    }
+}
 object GnssFlags {
     // 基本标志位
     const val SVID_FLAGS_NONE = 0
@@ -140,11 +137,12 @@ sealed class OrbitType(val minCn0: Float, val maxCn0: Float, val elevationRange:
     object MEO : OrbitType(MEO_MIN_CN0, MEO_MAX_CN0, 0f..90f)
 }
 
-data class BDSSatellite(
-    val prn: Int,
+data class GnssSatellite(
+    val svid: Int,
+    val constellation: Int,
     val type: OrbitType,
+    val carrierFreqHz: Float,
 )
-
 data class MockGnssData(
     val svCount: Int,
     val svidWithFlags: IntArray,
@@ -482,7 +480,9 @@ internal object LocationServiceHook: BaseLocationHook() {
 
                         if (!FakeLoc.enableMockGnss) return@beforeHook
 
-                        val svCount = Random.nextInt(FakeLoc.minSatellites, MAX_SATELLITES + 1)
+                        val maxSatellites = minOf(MAX_SATELLITES, satelliteList.size)
+                        val minSatellites = FakeLoc.minSatellites.coerceIn(1, maxSatellites)
+                        val svCount = Random.nextInt( minSatellites, maxSatellites + 1 )
                         val mockGps = MockGnssData(
                             svCount = svCount,
                             svidWithFlags = IntArray(svCount),
@@ -512,9 +512,12 @@ internal object LocationServiceHook: BaseLocationHook() {
                                 if (hasBasebandCn0) flags = flags or GnssFlags.SVID_FLAGS_HAS_BASEBAND_CN0
 
                                 // 组合SVID、星座类型和标志位
-                                svidWithFlags[index] = (sat.prn shl GnssFlags.SVID_SHIFT_WIDTH) or
-                                        ((GnssFlags.CONSTELLATION_BEIDOU and GnssFlags.CONSTELLATION_TYPE_MASK) shl GnssFlags.CONSTELLATION_TYPE_SHIFT_WIDTH) or
-                                        flags
+                                svidWithFlags[index] =
+                                    (sat.svid shl GnssFlags.SVID_SHIFT_WIDTH) or
+                                    ((sat.constellation and
+                                            GnssFlags.CONSTELLATION_TYPE_MASK)
+                                            shl GnssFlags.CONSTELLATION_TYPE_SHIFT_WIDTH) or
+                                    flags
 
                                 cn0s[index] = when (sat.type) {
                                     is OrbitType.GEO -> Random.nextFloat(GEO_MIN_CN0, GEO_MAX_CN0)
@@ -523,10 +526,7 @@ internal object LocationServiceHook: BaseLocationHook() {
                                 }
                                 elevations[index] = Random.nextFloat(sat.type.elevationRange.start, sat.type.elevationRange.endInclusive)
                                 azimuths[index] = Random.nextFloat(0f, 360f)
-                                carrierFreqs[index] = when (Random.nextInt(3)) {
-                                    0 -> BDS_B1I_FREQ
-                                    1 -> BDS_B2I_FREQ
-                                    else -> BDS_B3I_FREQ
+                                carrierFreqs[index] = sat.carrierFreqHz
                                 }
                             }
                         }
