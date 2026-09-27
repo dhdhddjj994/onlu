@@ -651,7 +651,7 @@ elevations[index] = sat.elevation
 azimuths[index] = sat.azimuth
 carrierFreqs[index] = sat.carrierFreqHz
                                 }
-                        
+                        }
 
                         if (args[0] is Int) {
                             args[0] = svCount
