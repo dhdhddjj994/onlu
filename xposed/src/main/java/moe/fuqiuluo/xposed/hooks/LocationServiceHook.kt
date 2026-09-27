@@ -229,6 +229,21 @@ data class GnssSatellite(
     val constellation: Int,
     val type: OrbitType,
     val carrierFreqHz: Float,
+
+    var cn0: Float =
+        Random.nextFloat(
+            type.minCn0,
+            type.maxCn0
+        ),
+
+    var elevation: Float =
+        Random.nextFloat(
+            type.elevationRange.start,
+            type.elevationRange.endInclusive
+        ),
+
+    var azimuth: Float =
+        Random.nextFloat(0f, 360f),
 )
 data class MockGnssData(
     val svCount: Int,
@@ -603,15 +618,38 @@ internal object LocationServiceHook: BaseLocationHook() {
                                             shl GnssFlags.CONSTELLATION_TYPE_SHIFT_WIDTH) or
                                     flags
 
-                                cn0s[index] = when (sat.type) {
-                                    is OrbitType.GEO -> Random.nextFloat(GEO_MIN_CN0, GEO_MAX_CN0)
-                                    is OrbitType.IGSO -> Random.nextFloat(IGSO_MIN_CN0, IGSO_MAX_CN0)
-                                    is OrbitType.MEO -> Random.nextFloat(MEO_MIN_CN0, MEO_MAX_CN0)
-                                }
-                                elevations[index] = Random.nextFloat(sat.type.elevationRange.start, sat.type.elevationRange.endInclusive)
-                                azimuths[index] = Random.nextFloat(0f, 360f)
-                                carrierFreqs[index] = sat.carrierFreqHz
-                                    }
+                                // 信号强度小幅变化
+                                sat.cn0 =
+                                    (
+                                        sat.cn0 +
+                                        Random.nextDouble(-0.5, 0.5).toFloat()
+                                    ).coerceIn(
+                                        sat.type.minCn0,
+                                        sat.type.maxCn0
+                                    )
+
+// 仰角缓慢变化
+                                sat.elevation =
+                                    (
+        sat.elevation +
+            Random.nextDouble(-0.15, 0.15).toFloat()
+    ).coerceIn(
+        sat.type.elevationRange.start,
+        sat.type.elevationRange.endInclusive
+    )
+
+// 方位角缓慢变化
+sat.azimuth =
+    (
+        sat.azimuth +
+            Random.nextDouble(-0.3, 0.3).toFloat() +
+            360f
+    ) % 360f
+
+cn0s[index] = sat.cn0
+elevations[index] = sat.elevation
+azimuths[index] = sat.azimuth
+carrierFreqs[index] = sat.carrierFreqHz
                                 }
                         
 
